@@ -252,7 +252,10 @@ def build_sample(intent: str, template: str) -> dict:
         if "{artist}" in template:
             slots["artist"] = v["artist"]
     elif intent == "volume.set":
-        slots["direction"] = v["direction"]
+        # 话语中说了"大/小"(direction_zh)才有方向槽位;
+        # "设置成40"这类只给具体值的话语没有方向语义
+        if "{direction_zh}" in template:
+            slots["direction"] = v["direction"]
         if "{value}" in template:
             slots["value"] = v["value"]
     elif intent == "reminder.set":

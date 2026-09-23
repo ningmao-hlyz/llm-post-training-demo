@@ -65,7 +65,12 @@ def extract_json(text: str) -> dict | None:
         return None
     try:
         obj = json.loads(m.group(0))
-        if isinstance(obj, dict) and "intent" in obj and "slots" in obj:
+        # schema 校验: intent 是字符串且 slots 是 dict, 否则视为格式不合法
+        if (
+            isinstance(obj, dict)
+            and isinstance(obj.get("intent"), str)
+            and isinstance(obj.get("slots"), dict)
+        ):
             return obj
     except json.JSONDecodeError:
         pass
