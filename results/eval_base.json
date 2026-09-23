@@ -1,0 +1,9 @@
+{
+  "model": "base",
+  "n": 200,
+  "format_valid_rate": 0.97,
+  "intent_accuracy": 0.0,
+  "slot_precision": 0.375,
+  "slot_recall": 0.0851,
+  "slot_f1": 0.1387
+}

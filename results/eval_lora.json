@@ -1,0 +1,9 @@
+{
+  "model": "lora",
+  "n": 200,
+  "format_valid_rate": 1.0,
+  "intent_accuracy": 0.985,
+  "slot_precision": 0.9588,
+  "slot_recall": 0.9688,
+  "slot_f1": 0.9637
+}
