@@ -54,10 +54,19 @@ def main():
     )
     print(f"[model] {MODEL_ID} | dtype={'bf16' if use_bf16 else 'fp16'}")
 
-    # 2. 数据集: conversational 格式, TRL 自动 apply chat template
+    # 2. 数据集: messages -> prompt-completion 格式
+    #    prompt=[system,user], completion=[assistant]
+    #    TRL 对 prompt-completion 数据默认只对 completion 算 loss。
+    #    (不直接用 assistant_only_loss: 它要求 chat template 含
+    #     {% generation %} 标记, Qwen2.5 的模板没有)
     ds = load_dataset("json", data_files=args.data_file, split="train")
-    ds = ds.remove_columns([c for c in ds.column_names if c != "messages"])
-    print(f"[data] {len(ds)} samples")
+
+    def to_prompt_completion(ex):
+        msgs = ex["messages"]
+        return {"prompt": msgs[:-1], "completion": [msgs[-1]]}
+
+    ds = ds.map(to_prompt_completion, remove_columns=ds.column_names)
+    print(f"[data] {len(ds)} samples (prompt-completion format)")
 
     # 3. LoRA 配置: 挂到 Transformer 全部 7 类线性层的旁路
     peft_config = LoraConfig(
@@ -92,7 +101,7 @@ def main():
         bf16=use_bf16,
         fp16=not use_bf16,
         gradient_checkpointing=False,         # 0.5B 不需要
-        assistant_only_loss=True,
+        completion_only_loss=True,            # 只对 completion(assistant) 算 loss
     )
 
     trainer = SFTTrainer(
