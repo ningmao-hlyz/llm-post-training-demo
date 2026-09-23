@@ -46,12 +46,13 @@ def main():
     import torch
 
     # 1. 加载基座与 tokenizer (bf16: 卡支持就用, 不支持退回 fp16)
-    dtype = "bf16" if torch.cuda.is_bf16_supported() else "fp16"
+    use_bf16 = torch.cuda.is_bf16_supported()
+    torch_dtype = torch.bfloat16 if use_bf16 else torch.float16
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID, torch_dtype=getattr(torch, dtype), device_map="auto"
+        MODEL_ID, torch_dtype=torch_dtype, device_map="auto"
     )
-    print(f"[model] {MODEL_ID} | dtype={dtype}")
+    print(f"[model] {MODEL_ID} | dtype={'bf16' if use_bf16 else 'fp16'}")
 
     # 2. 数据集: conversational 格式, TRL 自动 apply chat template
     ds = load_dataset("json", data_files=args.data_file, split="train")
@@ -87,8 +88,8 @@ def main():
         logging_steps=10,
         save_strategy="no",                   # demo 不存中间 checkpoint
         report_to="none",
-        bf16=(dtype == "bf16"),
-        fp16=(dtype == "fp16"),
+        bf16=use_bf16,
+        fp16=not use_bf16,
         gradient_checkpointing=False,         # 0.5B 不需要
     )
 

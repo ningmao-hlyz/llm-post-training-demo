@@ -42,10 +42,11 @@ def load_model_and_tokenizer(args):
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
-    dtype = "bf16" if torch.cuda.is_bf16_supported() else "fp16"
+    use_bf16 = torch.cuda.is_bf16_supported()
+    torch_dtype = torch.bfloat16 if use_bf16 else torch.float16
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID, torch_dtype=getattr(torch, dtype), device_map="auto"
+        MODEL_ID, torch_dtype=torch_dtype, device_map="auto"
     )
     name = "base"
     if args.model == "lora":
