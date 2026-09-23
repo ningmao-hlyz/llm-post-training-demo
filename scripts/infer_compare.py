@@ -67,7 +67,11 @@ def main():
         msgs = s["messages"][:2]
         gt = json.dumps({"intent": s["meta"]["intent"], "slots": s["meta"]["slots"]},
                         ensure_ascii=False)
-        out_base = gen(base, msgs)
+        # 坑: PeftModel.from_pretrained 是原地注入, base 引用的层已被替换,
+        # 直接 gen(base) 走的也是激活 adapter 的前向(对照组被污染)。
+        # 必须在 disable_adapter() 上下文中推理才是真正的基座行为。
+        with lora.disable_adapter():
+            out_base = gen(lora, msgs)
         out_lora = gen(lora, msgs)
         lines += [
             f"## {s['meta']['intent']}",
