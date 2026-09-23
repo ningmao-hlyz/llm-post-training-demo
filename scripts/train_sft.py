@@ -76,7 +76,8 @@ def main():
     )
     print(f"[lora] r={args.lora_r} (trainable params 会在 trainer 初始化后打印)")
 
-    # 4. 训练配置
+    # 4. 训练配置 (TRL 1.x: warmup_ratio 已移除改用 warmup_steps;
+    #    assistant_only_loss=True 显式只对 assistant 回复算 loss)
     sft_config = SFTConfig(
         output_dir=args.output_dir,
         num_train_epochs=args.epochs,
@@ -84,13 +85,14 @@ def main():
         gradient_accumulation_steps=args.grad_accum,
         learning_rate=args.lr,
         lr_scheduler_type="cosine",
-        warmup_ratio=0.05,
+        warmup_steps=10,
         logging_steps=10,
         save_strategy="no",                   # demo 不存中间 checkpoint
         report_to="none",
         bf16=use_bf16,
         fp16=not use_bf16,
         gradient_checkpointing=False,         # 0.5B 不需要
+        assistant_only_loss=True,
     )
 
     trainer = SFTTrainer(
